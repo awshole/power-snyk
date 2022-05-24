@@ -231,6 +231,7 @@ $tool = [PSCustomObject]@{
         driver = [PSCustomObject]@{
             name = 'Snyk Open Source'
             rules = $uniqueRules
+            informationUri = 'https://docs.snyk.io/products/snyk-open-source'
         }
     }
     results = $results
