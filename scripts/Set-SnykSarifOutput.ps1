@@ -106,6 +106,7 @@ $table"
     [array]$rules += [PSCustomObject]@{
         id = "update-$($package.packageName)-$($package.packageVersion)"
         name = (Get-Culture).TextInfo.ToTitleCase("Update $($package.packageName.Replace('-', ' '))") -Replace ' '
+        helpUri = $package.references.url -join '; '
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable and can be upgraded"
         }
@@ -185,6 +186,7 @@ $table"
     [array]$rules += [PSCustomObject]@{
         id = "vulnerable-$($package.packageName)-$($package.packageVersion)"
         name = (Get-Culture).TextInfo.ToTitleCase("Vulnerable $($package.packageName.Replace('-', ' '))") -Replace ' '
+        helpUri = $package.references.url -join '; '
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable but does not have an upgrade path"
         }
@@ -230,6 +232,7 @@ $tool = [PSCustomObject]@{
     tool = [PSCustomObject]@{
         driver = [PSCustomObject]@{
             name = 'Snyk Open Source'
+            version = '1.0.0'
             rules = $uniqueRules
             informationUri = 'https://docs.snyk.io/products/snyk-open-source'
         }
