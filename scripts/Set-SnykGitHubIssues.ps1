@@ -10,7 +10,7 @@ Param
     [Parameter(Mandatory = $False)] [string] $githubIssueAssignee,
     [Parameter(Mandatory = $False)] [array] $licenseLabels,
     [Parameter(Mandatory = $False)] [array] $securityLabels,
-    [Parameter(Mandatory = $False)] [array] $runId
+    [Parameter(Mandatory = $False)] [string] $runId
 )
 
 function Get-GitHubRepositoryFileContent {
@@ -101,7 +101,12 @@ if (Test-Path -Path $dotSourceFilePath.Split('/')[-1]) {
 
 $repositoryName = $repository.Split('/')[-1]
 $repositoryOwner = $repository.Split('/')[0]
-$projectIssuesHash = Get-Content -Path $pathToSnykIssues | ConvertFrom-Json -AsHashTable
+if (Test-Path -Path $pathToSnykIssues) {
+    $projectIssuesHash = Get-Content -Path $pathToSnykIssues | ConvertFrom-Json -AsHashTable
+} else {
+    Write-Warning "Unable to find file $pathToSnykIssues."
+    break
+}
 $issues = $projectIssuesHash.'vulnerabilities'
 [array]$upgradableIssues = $issues | Where-Object {($_.upgradePath.Count -gt 0 -or $_.patches.Count -gt 0 -or $_.fixedIn.Count -gt 0)}
 [array]$allUpgradablePackages = $upgradableIssues | ForEach-Object {$_.from[1]} | Select-Object -Unique
@@ -140,19 +145,31 @@ foreach ($issue in $licenseIssues) {
             Severity = $item.severity
             Url = $($item.licenseTemplateUrl)
             language = $item.language
-            'From' = $item.from -join ' 🠆 ' | Out-String
+            'From' = $item.from -join ' &#8594; ' | Out-String
             objFrom = $item.from
         }
-        
         [array]$allIssueData += $issueData
     }
-    
+    $allIssueData = $allIssueData | Group-Object -Property id
+    $uniqueIssueData = $null
+    foreach ($issue in $allIssueData) {
+        if ( $issue.Group.from.Count -gt 5) {
+            $fromString = ( $issue.Group.from | Select-Object -First 5) -join '; ' | Out-String
+            $fromString = "$fromString and $($issue.Group.from.Count - 5) more path(s)..."
+        } else {
+            $fromString = $issue.Group.from -join '; ' | Out-String
+        }
+        $toAdd = $issue.Group | Select-Object -First 1
+        $toAdd.from = $fromString
+        [array]$uniqueIssueData += $toAdd
+    }
+
     Add-Type -AssemblyName System.Web
-    $table = [System.Web.HttpUtility]::HtmlDecode(($allIssueData | Select-Object -Property * -ExcludeProperty id, Description, title, language, Url, objFrom | ConvertTo-Html -Fragment))
-    $licenseDescription = $licenseDescription + "<details> <summary> $($issue.Name) license </summary>
+    $table = [System.Web.HttpUtility]::HtmlDecode(($uniqueIssueData | Select-Object -Property * -ExcludeProperty id, Description, title, language, Url, objFrom | ConvertTo-Html -Fragment))
+    $licenseDescription = $licenseDescription + "<details> <summary> $($issue.Name.Split(':')[-1]) license </summary>
 
 ### Additional Details
-[$($issue.Name) license]($($allIssueData.Url | Select-Object -Unique)) has been identified as having issues. All of the occurances of the license are listed below." + "`r`n$table
+[$($issue.Name.Split(':')[-1]) license]($($allIssueData.Url | Select-Object -Unique)) has been identified as having issues. All of the occurances of the license are listed below." + "`r`n$table
 
 </details>
 
@@ -182,9 +199,14 @@ foreach ($package in $upgradablePackages) {
     $allIssueData = $allIssueData | Group-Object -Property id
     $uniqueIssueData = $null
     foreach ($issue in $allIssueData) {
-        $from = $issue.Group.from -join '; '
+        if ( $issue.Group.from.Count -gt 5) {
+            $fromString = ( $issue.Group.from | Select-Object -First 5) -join '; ' | Out-String
+            $fromString = "$fromString and $($issue.Group.from.Count - 5) more path(s)..."
+        } else {
+            $fromString = $issue.Group.from -join '; ' | Out-String
+        }
         $toAdd = $issue.Group | Select-Object -First 1
-        $toAdd.from = $from
+        $toAdd.from = $fromString
         [array]$uniqueIssueData += $toAdd
     }
     if ($package.packageName -notlike '') {
@@ -237,9 +259,14 @@ foreach ($package in $nonUpgradablePackages) {
     $allIssueData = $allIssueData | Group-Object -Property id
     $uniqueIssueData = $null
     foreach ($issue in $allIssueData) {
-        $from = $issue.Group.from -join '; '
+        if ( $issue.Group.from.Count -gt 5) {
+            $fromString = ( $issue.Group.from | Select-Object -First 5) -join '; ' | Out-String
+            $fromString = "$fromString and $($issue.Group.from.Count - 5) more path(s)..."
+        } else {
+            $fromString = $issue.Group.from -join '; ' | Out-String
+        }
         $toAdd = $issue.Group | Select-Object -First 1
-        $toAdd.from = $from
+        $toAdd.from = $fromString
         [array]$uniqueIssueData += $toAdd
     }
     if ($package.packageName -notlike '') {
