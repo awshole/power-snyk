@@ -106,7 +106,7 @@ $table"
     [array]$rules += [PSCustomObject]@{
         id = "update-$($package.packageName)-$($package.packageVersion)"
         name = (Get-Culture).TextInfo.ToTitleCase("Update $($package.packageName.Replace('-', ' '))") -Replace ' '
-        helpUri = $package.references.url -join '; '
+        helpUri = "https://security.snyk.io/vuln/$($package.id)"
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable and can be upgraded"
         }
@@ -186,7 +186,7 @@ $table"
     [array]$rules += [PSCustomObject]@{
         id = "vulnerable-$($package.packageName)-$($package.packageVersion)"
         name = (Get-Culture).TextInfo.ToTitleCase("Vulnerable $($package.packageName.Replace('-', ' '))") -Replace ' '
-        helpUri = $package.references.url -join '; '
+        helpUri = "https://security.snyk.io/vuln/$($package.id)"
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable but does not have an upgrade path"
         }
