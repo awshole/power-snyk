@@ -105,7 +105,7 @@ foreach ($package in $upgradablePackages) {
 $table"
     [array]$rules += [PSCustomObject]@{
         id = "update-$($package.packageName)-$($package.packageVersion)"
-        name = (Get-Culture).TextInfo.ToTitleCase("Update $($package.packageName)-$($package.packageVersion)") -Replace ' '
+        name = (Get-Culture).TextInfo.ToTitleCase("Update $($package.packageName.Replace('-', ''))") -Replace ' '
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable and can be upgraded"
         }
@@ -184,7 +184,7 @@ foreach ($package in $nonUpgradablePackages) {
 $table"
     [array]$rules += [PSCustomObject]@{
         id = "vulnerable-$($package.packageName)-$($package.packageVersion)"
-        name = (Get-Culture).TextInfo.ToTitleCase("Vulnerable $($package.packageName) $($package.packageVersion)") -Replace ' '
+        name = (Get-Culture).TextInfo.ToTitleCase("Vulnerable $($package.packageName.Replace('-', ''))") -Replace ' '
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable but does not have an upgrade path"
         }
