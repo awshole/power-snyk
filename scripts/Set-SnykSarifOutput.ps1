@@ -127,7 +127,7 @@ $table"
     $locations = [PSCustomObject]@{
         physicalLocation = [PSCustomObject]@{
             artifactLocation = [PSCustomObject]@{
-                uri = "$($dependecyFileData.path)"
+                uri = "$pathToDependencyFile"
             }
             region = [PSCustomObject]@{
                 startLine = $package.startLine
@@ -207,7 +207,7 @@ $table"
     $locations = [PSCustomObject]@{
         physicalLocation = [PSCustomObject]@{
             artifactLocation = [PSCustomObject]@{
-                uri = "$($dependecyFileData.path)"
+                uri = "$pathToDependencyFile"
             }
             region = [PSCustomObject]@{
                 startLine = $package.startLine
