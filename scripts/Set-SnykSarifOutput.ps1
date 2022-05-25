@@ -44,7 +44,7 @@ foreach ($package in $allUpgradablePackages) {
             pattern = $pattern
             startLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
             endLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
-            startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length
+            startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length + 1
             endColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length + 1
         }
     }
@@ -60,7 +60,7 @@ foreach ($package in $allNonUpgradablePackages) {
             pattern = $pattern
             startLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
             endLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
-            startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length
+            startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length + 1
             endColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length + 1
         }
     }
