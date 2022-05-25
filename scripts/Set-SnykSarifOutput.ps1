@@ -87,14 +87,6 @@ foreach ($package in $upgradablePackages) {
         }
         [array]$allIssueData += $issueData
     }
-
-    # if ($allIssueData.severity -contains 'high') {
-    #     $level = 'error'
-    # } elseif ($allIssueData.severity -contains 'medium') {
-    #     $level = 'warning'
-    # } elseif ($allIssueData.severity -contains 'low') {
-    #     $level = 'note'
-    # }
     
     Add-Type -AssemblyName System.Web
     $table = [System.Web.HttpUtility]::HtmlDecode(($allIssueData | Select-Object -Property * -ExcludeProperty labels, language, title, id, objFrom, Description | Sort-Object -Property 'CVSS Score' -Descending | ConvertTo-Html -Fragment)) | Out-String
@@ -117,9 +109,6 @@ $table"
             text = ''
             markdown = "$markdown"
         }
-        # defaultConfiguration = [PSCustomObject]@{
-        #     level = $level
-        # }
         properties = [PSCustomObject]@{
             tag = @('snyk', 'source composition analysis', 'security')
             'security-severity' = "$($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
@@ -169,14 +158,6 @@ foreach ($package in $nonUpgradablePackages) {
         [array]$allIssueData += $issueData
     }
 
-    # if ($allIssueData.severity -contains 'high') {
-    #     $level = 'error'
-    # } elseif ($allIssueData.severity -contains 'medium') {
-    #     $level = 'warning'
-    # } elseif ($allIssueData.severity -contains 'low') {
-    #     $level = 'note'
-    # }
-    
     Add-Type -AssemblyName System.Web
     $table = [System.Web.HttpUtility]::HtmlDecode(($allIssueData | Select-Object -Property * -ExcludeProperty labels, language, title, id, objFrom, Description | Sort-Object -Property 'CVSS Score' -Descending | ConvertTo-Html -Fragment)) | Out-String
     [array]$uniqueDescriptions = $allissueData.Description | Select-Object -Unique 
@@ -198,9 +179,6 @@ $table"
             text = ''
             markdown = "$markdown"
         }
-        # defaultConfiguration = [PSCustomObject]@{
-        #     level = $level
-        # }
         properties = [PSCustomObject]@{
             tag = @('snyk', 'source composition analysis', 'security')
             'security-severity' = "$($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
