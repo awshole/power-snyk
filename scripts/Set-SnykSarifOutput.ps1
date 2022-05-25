@@ -122,7 +122,7 @@ $table"
         # }
         properties = [PSCustomObject]@{
             tag = @('snyk', 'source composition analysis', 'security')
-            'security-severity' = ($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)
+            'security-severity' = "$($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
         }
     }
     $locations = [PSCustomObject]@{
@@ -203,7 +203,7 @@ $table"
         # }
         properties = [PSCustomObject]@{
             tag = @('snyk', 'source composition analysis', 'security')
-            'security-severity' = ($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)
+            'security-severity' = "$($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
         }
     }
     $locations = [PSCustomObject]@{
