@@ -51,10 +51,11 @@ foreach ($package in $allUpgradablePackages) {
 }
 
 foreach ($package in $allNonUpgradablePackages) {
+    $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
     $pattern = "$packageName[^-_].*\d"
     if ($dependencyContent -match $pattern) {
-        [array]$upgradablePackages += [PSCustomObject]@{
+        [array]$nonUpgradablePackages += [PSCustomObject]@{
             packageName = $packageName
             packageVersion = $packageVersion
             pattern = $pattern
