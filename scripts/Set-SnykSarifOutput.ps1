@@ -78,7 +78,7 @@ foreach ($package in $upgradablePackages) {
             title = "$($issue.title)"
             Severity = $issue.severity
             'Exploit Maturity' = $issue.exploit
-            CVE = "<a href=`"https://cve.mitre.org/cgi-bin/cvename.cgi?name=$($issue.identifiers.CVE)`">$($issue.title)</a>"
+            CVE = "<a href=`"https://security.snyk.io/vuln/$($issue.id)`">$($issue.title)</a>"
             'CVSS Score' = $issue.cvssScore
             language = $issue.language
             'From' = $issue.from -join ' 🠆 ' | Out-String
@@ -148,7 +148,7 @@ foreach ($package in $nonUpgradablePackages) {
             title = "$($issue.title)"
             Severity = $issue.severity
             'Exploit Maturity' = $issue.exploit
-            CVE = "<a href='https://cve.mitre.org/cgi-bin/cvename.cgi?name=$($issue.identifiers.CVE)'>$($issue.title)</a>"
+            CVE = "<a href=`"https://security.snyk.io/vuln/$($issue.id)`">$($issue.title)</a>"
             'CVSS Score' = $issue.cvssScore
             language = $issue.language
             'From' = $issue.from -join ' 🠆 ' | Out-String
