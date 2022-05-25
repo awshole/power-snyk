@@ -36,7 +36,7 @@ $issues = $projectIssues.vulnerabilities
 foreach ($package in $allUpgradablePackages) {
     $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
-    $pattern = "$packageName[^-_].*\d"
+    $pattern = "^$packageName[^-_].*\d"
     if ($dependencyContent -match $pattern) {
         [array]$upgradablePackages += [PSCustomObject]@{
             packageName = $packageName
@@ -53,7 +53,7 @@ foreach ($package in $allUpgradablePackages) {
 foreach ($package in $allNonUpgradablePackages) {
     $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
-    $pattern = "$packageName[^-_].*\d"
+    $pattern = "^$packageName[^-_].*\d"
     if ($dependencyContent -match $pattern) {
         [array]$nonUpgradablePackages += [PSCustomObject]@{
             packageName = $packageName
