@@ -71,7 +71,7 @@ foreach ($package in $upgradablePackages) {
     $allIssueData = $null
     foreach ($issue in $remediatedIssues) {       
         $issueData = [PSCustomObject][ordered]@{
-            'Vulnerable Package' = $issue.Name
+            'Vulnerable Package' = $issue.name
             id = $issue.id
             Description = $issue.description
             Version = $issue.version
@@ -151,7 +151,7 @@ foreach ($package in $nonUpgradablePackages) {
     $allIssueData = $null
     foreach ($issue in $nonFixableIssues) {       
         $issueData = [PSCustomObject][ordered]@{
-            'Vulnerable Package' = $issue.Name
+            'Vulnerable Package' = $issue.name
             id = $issue.id
             Description = $issue.description
             Version = $issue.version
