@@ -389,8 +389,9 @@ $table"
     } 
 }
 
+$uniqueRules = New-Object System.Collections.Generic.List[System.Object]
 $rulesGroup = $rules | Group-Object -Property id
-$rulesGroup | ForEach-Object {[array]$uniqueRules += $_.Group | Select-Object -First 1}
+$rulesGroup | ForEach-Object {$uniqueRules.Add(($_.Group | Select-Object -First 1))}
 if ($null -eq $results) { $results = @() }
 if ($null -eq $uniqueRules) { $uniqueRules = @() }
 $tool = [PSCustomObject]@{
