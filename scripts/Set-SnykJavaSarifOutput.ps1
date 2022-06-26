@@ -34,13 +34,9 @@ $issues = $projectIssues.vulnerabilities
 [array]$allNonUpgradablePackages = $nonUpgradableIssues.from | Select-Object -Unique
 
 foreach ($package in $allUpgradablePackages) {
-    if ($package -match '^@') {
-        $packageName = $package.Substring(0, $package.Length - $package.Split('@')[-1].Length - 1)
-    } else {
-        $packageName = $package.split('@')[0]
-    }
+    $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
-    $pattern = "$packageName[^-_].*$packageVersion"
+    $pattern = ".*$packageName.*"
     if ($dependencyContent -match $pattern) {
         [array]$upgradablePackages += [PSCustomObject]@{
             packageName = $packageName
@@ -55,13 +51,9 @@ foreach ($package in $allUpgradablePackages) {
 }
 
 foreach ($package in $allNonUpgradablePackages) {
-    if ($package -match '^@') {
-        $packageName = $package.Substring(0, $package.Length - $package.Split('@')[-1].Length - 1)
-    } else {
-        $packageName = $package.split('@')[0]
-    }
+    $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
-    $pattern = "$packageName[^-_].*$packageVersion"
+    $pattern = ".*$packageName.*"
     if ($dependencyContent -match $pattern) {
         [array]$nonUpgradablePackages += [PSCustomObject]@{
             packageName = $packageName
@@ -180,7 +172,6 @@ foreach ($package in $nonUpgradablePackages) {
         }
         [array]$allIssueData += $issueData
     }
-
     $allIssueData = $allIssueData | Group-Object -Property id
     $uniqueIssueData = $null
     foreach ($issue in $allIssueData) {

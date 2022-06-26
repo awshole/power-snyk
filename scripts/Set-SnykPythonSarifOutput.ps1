@@ -89,9 +89,25 @@ foreach ($package in $upgradablePackages) {
         [array]$allIssueData += $issueData
     }
     
+    $allIssueData = $allIssueData | Group-Object -Property id
+    $uniqueIssueData = $null
+    foreach ($issue in $allIssueData) {
+        if ( $issue.Group.from.Count -gt 5) {
+            $fromString = ( $issue.Group.from | Select-Object -First 5) -join '</li><li>' | Out-String
+            $fromString = "<ul><li>$fromString</li></ul>"
+            $fromString = "$fromString and $($issue.Group.from.Count - 5) more path(s)..."
+        } else {
+            $fromString = $issue.Group.from -join '</li><li>' | Out-String
+            $fromString = "<ul><li>$fromString</li></ul>"
+        }
+        $toAdd = $issue.Group | Select-Object -First 1
+        $toAdd.from = $fromString
+        [array]$uniqueIssueData += $toAdd
+    }
+    
     Add-Type -AssemblyName System.Web
-    $table = [System.Web.HttpUtility]::HtmlDecode(($allIssueData | Select-Object -Property * -ExcludeProperty labels, language, title, id, objFrom, Description | Sort-Object -Property 'CVSS Score' -Descending | ConvertTo-Html -Fragment)) | Out-String
-    [array]$uniqueDescriptions = $allissueData.Description | Select-Object -Unique 
+    $table = [System.Web.HttpUtility]::HtmlDecode(($uniqueIssueData | Select-Object -Property * -ExcludeProperty labels, language, title, id, objFrom, Description | Sort-Object -Property 'CVSS Score' -Descending | ConvertTo-Html -Fragment)) | Out-String
+    [array]$uniqueDescriptions = $uniqueIssueData.Description | Select-Object -Unique 
     [string]$details = $uniqueDescriptions -join "$([Environment]::NewLine; [Environment]::NewLine)---$([Environment]::NewLine; [Environment]::NewLine)" | Out-String
     [string]$markdown = "All of the vulnerabilities are listed below
 
@@ -104,7 +120,7 @@ $table"
             text = "$($package.packageName) $($package.packageVersion) is vulnerable and can be upgraded"
         }
         fullDescription = [PSCustomObject]@{
-            text = "$($package.packageName) $($package.packageVersion) contains $($allIssueData.count) issues"
+            text = "$($package.packageName) $($package.packageVersion) contains $($uniqueIssueData.count) issues"
         }
         help = [PSCustomObject]@{
             text = ''
@@ -112,7 +128,7 @@ $table"
         }
         properties = [PSCustomObject]@{
             tag = @('snyk', 'source composition analysis', 'security')
-            'security-severity' = "$($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
+            'security-severity' = "$($uniqueIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
         }
     }
     $locations = [PSCustomObject]@{
@@ -154,14 +170,29 @@ foreach ($package in $nonUpgradablePackages) {
             language = $issue.language
             'From' = $issue.from -join ' 🠆 ' | Out-String
             objFrom = $issue.from
-            'Fixed In' = $issue.fixedIn -join ', ' | Out-String
         }
         [array]$allIssueData += $issueData
     }
 
+    $allIssueData = $allIssueData | Group-Object -Property id
+    $uniqueIssueData = $null
+    foreach ($issue in $allIssueData) {
+        if ( $issue.Group.from.Count -gt 5) {
+            $fromString = ( $issue.Group.from | Select-Object -First 5) -join '</li><li>' | Out-String
+            $fromString = "<ul><li>$fromString</li></ul>"
+            $fromString = "$fromString and $($issue.Group.from.Count - 5) more path(s)..."
+        } else {
+            $fromString = $issue.Group.from -join '</li><li>' | Out-String
+            $fromString = "<ul><li>$fromString</li></ul>"
+        }
+        $toAdd = $issue.Group | Select-Object -First 1
+        $toAdd.from = $fromString
+        [array]$uniqueIssueData += $toAdd
+    }
+    
     Add-Type -AssemblyName System.Web
-    $table = [System.Web.HttpUtility]::HtmlDecode(($allIssueData | Select-Object -Property * -ExcludeProperty labels, language, title, id, objFrom, Description | Sort-Object -Property 'CVSS Score' -Descending | ConvertTo-Html -Fragment)) | Out-String
-    [array]$uniqueDescriptions = $allissueData.Description | Select-Object -Unique 
+    $table = [System.Web.HttpUtility]::HtmlDecode(($uniqueIssueData | Select-Object -Property * -ExcludeProperty labels, language, title, id, objFrom, Description | Sort-Object -Property 'CVSS Score' -Descending | ConvertTo-Html -Fragment)) | Out-String
+    [array]$uniqueDescriptions = $uniqueIssueData.Description | Select-Object -Unique 
     [string]$details = $uniqueDescriptions -join "$([Environment]::NewLine; [Environment]::NewLine)---$([Environment]::NewLine; [Environment]::NewLine)" | Out-String
     [string]$markdown = "All of the vulnerabilities are listed below
 
@@ -174,7 +205,7 @@ $table"
             text = "$($package.packageName) $($package.packageVersion) is vulnerable but does not have an upgrade path"
         }
         fullDescription = [PSCustomObject]@{
-            text = "$($package.packageName) $($package.packageVersion) contains $($allIssueData.count) issues"
+            text = "$($package.packageName) $($package.packageVersion) contains $($uniqueIssueData.count) issues"
         }
         help = [PSCustomObject]@{
             text = ''
@@ -182,7 +213,7 @@ $table"
         }
         properties = [PSCustomObject]@{
             tag = @('snyk', 'source composition analysis', 'security')
-            'security-severity' = "$($allIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
+            'security-severity' = "$($uniqueIssueData.'CVSS Score' | Sort-Object -Descending | Select-Object -First 1)"
         }
     }
     $locations = [PSCustomObject]@{
@@ -209,6 +240,8 @@ $table"
 
 $rulesGroup = $rules | Group-Object -Property id
 $rulesGroup | ForEach-Object {[array]$uniqueRules += $_.Group | Select-Object -First 1}
+if ($null -eq $results) { $results = @() }
+if ($null -eq $uniqueRules) { $uniqueRules = @() }
 $tool = [PSCustomObject]@{
     tool = [PSCustomObject]@{
         driver = [PSCustomObject]@{

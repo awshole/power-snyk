@@ -25,7 +25,12 @@ if (Test-Path -Path $dotSourceFilePath) {
     break
 }
 
-$dependencyContent = Get-Content $pathToDependencyFile
+$packageConfigs = Get-ChildItem -Path (Split-Path $pathToDependencyFile -Parent)  -Include '*packages.config' -Recurse
+$packageConfigs | ForEach-Object {[array]$allDependencyContent += [PSCustomObject]@{
+        path = $_.FullName | Resolve-Path -Relative
+        content = Get-Content $_.FullName
+    }
+}
 $projectIssues = Get-Content -Path $pathToSnykIssues | ConvertFrom-Json -AsHashTable
 $issues = $projectIssues.vulnerabilities
 [array]$upgradableIssues = $issues | Where-Object {($_.upgradePath.Count -gt 0 -or $_.patches.Count -gt 0 -or $_.fixedIn.Count -gt 0)}
@@ -34,43 +39,43 @@ $issues = $projectIssues.vulnerabilities
 [array]$allNonUpgradablePackages = $nonUpgradableIssues.from | Select-Object -Unique
 
 foreach ($package in $allUpgradablePackages) {
-    if ($package -match '^@') {
-        $packageName = $package.Substring(0, $package.Length - $package.Split('@')[-1].Length - 1)
-    } else {
-        $packageName = $package.split('@')[0]
-    }
+    $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
-    $pattern = "$packageName[^-_].*$packageVersion"
-    if ($dependencyContent -match $pattern) {
-        [array]$upgradablePackages += [PSCustomObject]@{
-            packageName = $packageName
-            packageVersion = $packageVersion
-            pattern = $pattern
-            startLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
-            endLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
-            startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length + 1
-            endColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length + 1
+    $pattern = ".*`"$packageName`".*version=.*$packageVersion.*"
+    foreach ($config in $allDependencyContent) {
+        $dependencyContent = $config.content
+        if ($dependencyContent -match $pattern) {
+            [array]$upgradablePackages += [PSCustomObject]@{
+                packageName = $packageName
+                packageVersion = $packageVersion
+                pattern = $pattern
+                path = $config.path.Replace('\','/').Split('./')[-1]
+                startLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
+                endLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
+                startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length + 1
+                endColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length + 1
+            }
         }
     }
 }
 
 foreach ($package in $allNonUpgradablePackages) {
-    if ($package -match '^@') {
-        $packageName = $package.Substring(0, $package.Length - $package.Split('@')[-1].Length - 1)
-    } else {
-        $packageName = $package.split('@')[0]
-    }
+    $packageName = $package.split('@')[0]
     $packageVersion = $package.split('@')[-1].Trim()
-    $pattern = "$packageName[^-_].*$packageVersion"
-    if ($dependencyContent -match $pattern) {
-        [array]$nonUpgradablePackages += [PSCustomObject]@{
-            packageName = $packageName
-            packageVersion = $packageVersion
-            pattern = $pattern
-            startLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
-            endLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
-            startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length + 1
-            endColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length + 1
+    $pattern = ".*`"$packageName`".*version=.*$packageVersion.*"
+    foreach ($config in $allDependencyContent) {
+        $dependencyContent = $config.content
+        if ($dependencyContent -match $pattern) {
+            [array]$nonUpgradablePackages += [PSCustomObject]@{
+                packageName = $packageName
+                packageVersion = $packageVersion
+                pattern = $pattern
+                path = $config.path.Replace('\','/').Split('./')[-1]
+                startLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
+                endLine = $dependencyContent.IndexOf(($dependencyContent | Select-String -Pattern $pattern)) + 1
+                startColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length - ($dependencyContent -match $pattern).TrimStart().Length + 1
+                endColumn = ($dependencyContent | Select-String -Pattern $pattern).Line.Length + 1
+            }
         }
     }
 }
@@ -121,7 +126,7 @@ foreach ($package in $upgradablePackages) {
 $table"
     [array]$rules += [PSCustomObject]@{
         id = "update-$($package.packageName)-$($package.packageVersion)"
-        name = (Get-Culture).TextInfo.ToTitleCase("Update $($package.packageName.Replace('-', ' '))") -Replace ' '
+        name = (Get-Culture).TextInfo.ToTitleCase("Update $($package.packageName.Replace('-', ' '))$($package.packageVersion)") -Replace ' '
         helpUri = "https://security.snyk.io/vuln/$($package.id)"
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable and can be upgraded"
@@ -141,7 +146,7 @@ $table"
     $locations = [PSCustomObject]@{
         physicalLocation = [PSCustomObject]@{
             artifactLocation = [PSCustomObject]@{
-                uri = "$pathToDependencyFile"
+                uri = $package.path
             }
             region = [PSCustomObject]@{
                 startLine = $package.startLine
@@ -180,7 +185,6 @@ foreach ($package in $nonUpgradablePackages) {
         }
         [array]$allIssueData += $issueData
     }
-
     $allIssueData = $allIssueData | Group-Object -Property id
     $uniqueIssueData = $null
     foreach ($issue in $allIssueData) {
@@ -206,7 +210,7 @@ foreach ($package in $nonUpgradablePackages) {
 $table"
     [array]$rules += [PSCustomObject]@{
         id = "vulnerable-$($package.packageName)-$($package.packageVersion)"
-        name = (Get-Culture).TextInfo.ToTitleCase("Vulnerable $($package.packageName.Replace('-', ' '))") -Replace ' '
+        name = (Get-Culture).TextInfo.ToTitleCase("Vulnerable $($package.packageName.Replace('-', ' '))$($package.packageVersion)") -Replace ' '
         helpUri = "https://security.snyk.io/vuln/$($package.id)"
         shortDescription = [PSCustomObject]@{
             text = "$($package.packageName) $($package.packageVersion) is vulnerable but does not have an upgrade path"
@@ -226,7 +230,7 @@ $table"
     $locations = [PSCustomObject]@{
         physicalLocation = [PSCustomObject]@{
             artifactLocation = [PSCustomObject]@{
-                uri = "$pathToDependencyFile"
+                uri = $package.path
             }
             region = [PSCustomObject]@{
                 startLine = $package.startLine
