@@ -54,9 +54,13 @@ if ($language -like 'python') {
     
 } elseif ($language -like 'javascript') {
     foreach ($package in $allUpgradablePackages) {
-        $packageName = $package.split('@')[0]
+        if ($package -match '^@') {
+            $packageName = $package.Substring(0, $package.Length - $package.Split('@')[-1].Length - 1)
+        } else {
+            $packageName = $package.split('@')[0]
+        }
         $packageVersion = $package.split('@')[-1].Trim()
-        $pattern = ".*$packageName.*"
+        $pattern = "$packageName[^-_].*$packageVersion"
         if ($dependencyContent -match $pattern) {
             [array]$upgradablePackages += [PSCustomObject]@{
                 packageName = $packageName
@@ -71,9 +75,13 @@ if ($language -like 'python') {
     }
     
     foreach ($package in $allNonUpgradablePackages) {
-        $packageName = $package.split('@')[0]
+        if ($package -match '^@') {
+            $packageName = $package.Substring(0, $package.Length - $package.Split('@')[-1].Length - 1)
+        } else {
+            $packageName = $package.split('@')[0]
+        }
         $packageVersion = $package.split('@')[-1].Trim()
-        $pattern = ".*$packageName.*"
+        $pattern = "$packageName[^-_].*$packageVersion"
         if ($dependencyContent -match $pattern) {
             [array]$nonUpgradablePackages += [PSCustomObject]@{
                 packageName = $packageName
